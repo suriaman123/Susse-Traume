@@ -15,16 +15,17 @@ ledtime = 2 * 60 * 1000      # 2 minutes
 
 
 def df_command(cmd, param1=0, param2=0):
-    """Send a command packet to the DFPlayer Mini."""
-    packet = bytearray(10)
-    packet[0] = 0x7E
-    packet[1] = 0xFF
-    packet[2] = 0x06
-    packet[3] = cmd                         # play music
-    packet[4] = 0x00
+# Send a command packet to the DFPlayer Mini.
+    packet = bytearray(10)                  # this creates space for 10 bytes; [00] [00] [00] [00] [00] [00] [00] [00] [00] [00]
+    packet[0] = 0x7E                        # command packet starts here
+    packet[1] = 0xFF                        # protocol
+    packet[2] = 0x06                        # length of the command information that follows according to its protocol
+    packet[3] = cmd                         # command => different command numbers mean different things
+                                            # 0x03 = play track; 0x06 = set volume
+    packet[4] = 0x00                        # feedback
     packet[5] = param1
     packet[6] = param2
-    checksum = (0 - sum(packet[1:7])) & 0xFFFF
+    checksum = (0 - sum(packet[1:7])) & 0xFFFF      #  checks whether the command is correct or was corrupted during transmission
     packet[7] = (checksum >> 8) & 0xFF
     packet[8] = checksum & 0xFF
     packet[9] = 0xEF
@@ -54,12 +55,12 @@ while True:
 
     is_dark = level < dark
 
-    # Trigger only on the transition from light to  dark
+    # Trigger only on the transiting from light to  dark
     if is_dark and light_was_on:
         led.value(1)
         play_track(1)           # plays 0001.mp3
-        #time.sleep(2 * 60)
-        #led.value(0)
+        #time.sleep(2 * 60)     # cannot detect if some turn on the light after turning ti off
+        #led.value(0)           
         led_active = True
         led_start = time.ticks_ms()
 
